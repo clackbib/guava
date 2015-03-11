@@ -90,7 +90,7 @@ import java.util.logging.Logger;
  * receive any Object will never receive a DeadEvent.
  *
  * <p>This class is safe for concurrent use.
- * 
+ *
  * <p>See the Guava User Guide article on <a href=
  * "http://code.google.com/p/guava-libraries/wiki/EventBusExplained">
  * {@code EventBus}</a>.
@@ -130,7 +130,7 @@ public class EventBus {
 
   /**
    * Creates a new EventBus with the given {@link SubscriberExceptionHandler}.
-   * 
+   *
    * @param exceptionHandler Handler for subscriber exceptions.
    * @since 16.0
    */
@@ -185,6 +185,15 @@ public class EventBus {
   public void register(Object object) {
     subscribers.register(object);
   }
+
+  /**
+   * Register a callback triggered when {@link #post(java.lang.Object)}
+   * @param callBack Callback given to handle subscriber method execution.
+   */
+  public void registerCallBack(EventCallBack callBack){
+    this.subscribers.setRegistrationCallBack(callBack);
+  }
+
 
   /**
    * Unregisters all subscriber methods on a registered {@code object}.

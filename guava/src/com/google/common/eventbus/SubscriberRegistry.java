@@ -68,6 +68,7 @@ final class SubscriberRegistry {
    * The event bus this registry belongs to.
    */
   private final EventBus bus;
+  private EventCallBack registrationCallBack;
 
   SubscriberRegistry(EventBus bus) {
     this.bus = checkNotNull(bus);
@@ -171,7 +172,7 @@ final class SubscriberRegistry {
     for (Method method : getAnnotatedMethods(clazz)) {
       Class<?>[] parameterTypes = method.getParameterTypes();
       Class<?> eventType = parameterTypes[0];
-      methodsInListener.put(eventType, Subscriber.create(bus, listener, method));
+      methodsInListener.put(eventType, Subscriber.create(bus, listener, method, this.registrationCallBack));
     }
     return methodsInListener;
   }
@@ -229,6 +230,10 @@ final class SubscriberRegistry {
     } catch (UncheckedExecutionException e) {
       throw Throwables.propagate(e.getCause());
     }
+  }
+
+  public void setRegistrationCallBack(EventCallBack registrationCallBack) {
+    this.registrationCallBack = registrationCallBack;
   }
 
   private static final class MethodIdentifier {

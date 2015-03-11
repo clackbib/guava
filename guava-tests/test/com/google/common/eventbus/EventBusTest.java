@@ -248,6 +248,35 @@ public class EventBusTest extends TestCase {
                  expectedEvents, catcher2.getEvents());
   }
 
+  public void testRegisterCallBack(){
+    StringCatcher catcher1 = new StringCatcher();
+    StringCatcher catcher2 = new StringCatcher();
+    final String[] testValue1 = new String[1];
+    bus.register(catcher1);
+    bus.registerCallBack(new EventCallBack() {
+      @Override
+      public void onEventExecuted(String classCanonicalName, String methodName, Object event) {
+        testValue1[0] = methodName;
+      }
+    });
+    bus.post(EVENT);
+    assertNull("The first callback was registered after the event catcher, the test value should be still null", testValue1[0]);
+
+    bus.register(catcher2);
+    bus.post(EVENT);
+    assertNotNull("The second event catcher was registered after the callback, the test value should no longer be null ", testValue1[0]);
+
+    bus.unregister(catcher2);
+    testValue1[0] = null;
+    bus.post(EVENT);
+    assertNull("The callback should not have been triggered after the second event catcher was unregistered", testValue1[0]);
+    bus.unregister(catcher1);
+    bus.register(catcher1);
+    assertNotNull("The first event catcher was re-registered with the bus, thus, the test value should no longer be null ");
+    bus.registerCallBack(null);
+
+  }
+
   // NOTE: This test will always pass if register() is thread-safe but may also
   // pass if it isn't, though this is unlikely.
 

@@ -42,8 +42,14 @@ class Subscriber {
    */
   static Subscriber create(EventBus bus, Object listener, Method method) {
     return isDeclaredThreadSafe(method)
-        ? new Subscriber(bus, listener, method)
-        : new SynchronizedSubscriber(bus, listener, method);
+        ? new Subscriber(bus, listener, method, null)
+        : new SynchronizedSubscriber(bus, listener, method, null);
+  }
+
+  static Subscriber create(EventBus bus, Object listener, Method method, EventCallBack eventCallBack) {
+    return isDeclaredThreadSafe(method)
+            ? new Subscriber(bus, listener, method, eventCallBack)
+            : new SynchronizedSubscriber(bus, listener, method, eventCallBack);
   }
 
   /** The event bus this subscriber belongs to. */
@@ -56,16 +62,23 @@ class Subscriber {
   /** Subscriber method. */
   private final Method method;
 
+  private final EventCallBack eventCallBack;
+
   /** Executor to use for dispatching events to this subscriber. */
   private final Executor executor;
 
-  private Subscriber(EventBus bus, Object target, Method method) {
+  private Subscriber(EventBus bus, Object target, Method method, EventCallBack eventCallBack) {
     this.bus = bus;
     this.target = checkNotNull(target);
     this.method = method;
+    this.eventCallBack = eventCallBack;
     method.setAccessible(true);
 
     this.executor = bus.executor();
+  }
+
+  private Subscriber(EventBus bus, Object target, Method method){
+    this(bus, target, method, null);
   }
 
   /**
@@ -92,6 +105,9 @@ class Subscriber {
   void invokeSubscriberMethod(Object event) throws InvocationTargetException {
     try {
       method.invoke(target, checkNotNull(event));
+      if(eventCallBack != null){
+        eventCallBack.onEventExecuted(target.getClass().getCanonicalName(), method.getName(), event);
+      }
     } catch (IllegalArgumentException e) {
       throw new Error("Method rejected target/argument: " + event, e);
     } catch (IllegalAccessException e) {
@@ -143,8 +159,8 @@ class Subscriber {
   @VisibleForTesting
   static final class SynchronizedSubscriber extends Subscriber {
 
-    private SynchronizedSubscriber(EventBus bus, Object target, Method method) {
-      super(bus, target, method);
+    private SynchronizedSubscriber(EventBus bus, Object target, Method method, EventCallBack eventCallBack) {
+      super(bus, target, method, eventCallBack);
     }
 
     @Override
